@@ -1,0 +1,11 @@
+/* Import Tailwind CSS (v4 syntax — single @import replaces the 3 directives) */
+@import "tailwindcss";
+
+/* Custom design tokens */
+@theme inline {
+  --color-brand: #16a34a;        /* green-600 */
+  --color-brand-light: #dcfce7;  /* green-100 */
+  --color-brand-dark: #15803d;   /* green-700 */
+  --color-surface: #f7faf3;      /* off-white with a hint of green */
+  --color-muted: #6b7280;        /* gray-500 */
+}
