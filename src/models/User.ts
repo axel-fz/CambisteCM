@@ -7,26 +7,33 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 // TypeScript interface for a User document
 export interface IUser extends Document {
-  clerkId: string;           // Clerk's unique user ID
+  clerkId: string;
   name: string;
   email: string;
-  role: "echangeur" | "changeur";  // chosen during onboarding
-  neighborhood: string;      // user's neighborhood / quartier
+  role: "echangeur" | "changeur";
+  neighborhood: string;
   phone: string;
   onboardingComplete: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-const UserSchema = new Schema<IUser>({
-  clerkId:             { type: String, required: true, unique: true },
-  name:                { type: String, required: true },
-  email:               { type: String, required: true },
-  role:                { type: String, enum: ["echangeur", "changeur"] },
-  neighborhood:        { type: String, default: "" },
-  phone:               { type: String, default: "" },
-  onboardingComplete:  { type: Boolean, default: false },
-  createdAt:           { type: Date, default: Date.now },
-});
+const UserSchema = new Schema<IUser>(
+  {
+    clerkId: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["echangeur", "changeur"],
+      required: true,
+    },
+    neighborhood: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    onboardingComplete: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
 
 // Guard against model re-compilation during Next.js hot-reloads
 const User: Model<IUser> =

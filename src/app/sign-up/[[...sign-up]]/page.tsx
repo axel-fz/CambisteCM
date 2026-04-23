@@ -8,7 +8,10 @@ import { SignUp } from "@clerk/nextjs";
 export default function SignUpPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#f7faf3]">
-      <SignUp />
+      <SignUp
+        forceRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL}
+        fallbackRedirectUrl={process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL}
+      />
     </main>
   );
 }

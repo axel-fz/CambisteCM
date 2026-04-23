@@ -1,51 +1,45 @@
 /**
  * components/Sidebar.tsx
  * Persistent left sidebar for the dashboard layout.
- * Uses usePathname() to highlight the active route.
- * Includes Clerk's UserButton at the bottom for account management.
  */
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 
-// Each nav item: label, icon (Material Symbol), and href
 const NAV_ITEMS = [
-  { label: "Tableau de bord", icon: "dashboard",      href: "/dashboard" },
-  { label: "Mes Demandes",    icon: "list_alt",       href: "/dashboard/requests" },
-  { label: "Marketplace",     icon: "storefront",     href: "/dashboard/marketplace" },
-  { label: "Historique",      icon: "history",        href: "/dashboard/history" },
-  { label: "Paramètres",      icon: "settings",       href: "/dashboard/settings" },
+  { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
+  { label: "Mes demandes", icon: "list_alt", href: "/dashboard/requests" },
+  { label: "Marketplace", icon: "storefront", href: "/dashboard/marketplace" },
+  { label: "Historique", icon: "history", href: "/dashboard/history" },
+  { label: "Paramètres", icon: "settings", href: "/dashboard/settings" },
 ];
 
 export default function Sidebar() {
-  // usePathname() tells us which route is active, so we can highlight it
   const pathname = usePathname();
+  const { user } = useUser();
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-slate-100 flex flex-col shrink-0">
-      {/* Logo */}
-      <div className="px-6 py-5 border-b border-slate-100">
-        <span className="text-lg font-bold text-green-700 tracking-tight">
-          💱 CambisteCM
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-slate-100 bg-white">
+      <div className="border-b border-slate-100 px-6 py-5">
+        <span className="text-lg font-bold tracking-tight text-[#005129]">
+          CambisteCM
         </span>
       </div>
 
-      {/* Navigation links */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {NAV_ITEMS.map(({ label, icon, href }) => {
-          // Exact match for /dashboard, prefix match for sub-routes
           const isActive =
-            href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+            href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-green-50 text-green-700"
+                  ? "bg-emerald-50 text-[#005129]"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
               }`}
             >
@@ -56,10 +50,14 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* User button at the bottom */}
-      <div className="px-6 py-5 border-t border-slate-100 flex items-center gap-3">
-        <UserButton afterSignOutUrl="/" />
-        <span className="text-sm text-slate-500">Mon compte</span>
+      <div className="flex items-center gap-3 border-t border-slate-100 px-6 py-5">
+        <UserButton />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-slate-800">
+            {user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? "Mon compte"}
+          </p>
+          <p className="text-xs text-slate-500">Compte connecté</p>
+        </div>
       </div>
     </aside>
   );

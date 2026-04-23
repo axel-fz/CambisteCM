@@ -1,32 +1,50 @@
 /**
  * app/api/exchange-requests/route.ts
- * GET  — List all open exchange requests (newest first).
- * POST — Create a new exchange request for the current user.
+ * GET  - List exchange requests for the current user.
+ * POST - Create a new exchange request for the current user.
  */
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
 import ExchangeRequest from "@/models/ExchangeRequest";
 
-// GET /api/exchange-requests → list open requests
+// GET /api/exchange-requests -> list requests for the current user
 export async function GET() {
-  await connectDB();
+  const { userId } = await auth();
+  if (!userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  const requests = await ExchangeRequest.find({ status: "open" }).sort({
-    createdAt: -1,
-  });
+  try {
+    await connectDB();
 
-  return Response.json(requests);
+    const requests = await ExchangeRequest.find({ requesterId: userId }).sort({
+      createdAt: -1,
+    });
+
+    return Response.json(requests);
+  } catch (error) {
+    console.error("GET /api/exchange-requests failed", error);
+    return Response.json(
+      { error: "Failed to load exchange requests" },
+      { status: 500 }
+    );
+  }
 }
 
-// POST /api/exchange-requests → create a new request
+// POST /api/exchange-requests -> create a new request
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { amount, fromCurrency, toCurrency, targetChangerId } = await req.json();
+  const { amount, fromCurrency, toCurrency, targetChangerId } = (await req.json()) as {
+    amount?: number;
+    fromCurrency?: string;
+    toCurrency?: string;
+    targetChangerId?: string;
+  };
 
   if (!amount || !fromCurrency || !toCurrency) {
     return Response.json(
@@ -35,16 +53,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await connectDB();
+  try {
+    await connectDB();
 
-  const request = await ExchangeRequest.create({
-    requesterId:     userId,
-    targetChangerId: targetChangerId ?? undefined,
-    amount,
-    fromCurrency,
-    toCurrency,
-    status: "open",
-  });
+    const request = await ExchangeRequest.create({
+      requesterId: userId,
+      targetChangerId: targetChangerId ?? undefined,
+      amount,
+      fromCurrency,
+      toCurrency,
+      status: "open",
+    });
 
-  return Response.json(request, { status: 201 });
+    return Response.json(request, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/exchange-requests failed", error);
+    return Response.json(
+      { error: "Failed to create exchange request" },
+      { status: 500 }
+    );
+  }
 }

@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Show } from "@clerk/nextjs";
 
 // Type for the two roles a user can choose
 type Role = "echangeur" | "changeur";
@@ -26,10 +27,11 @@ const CHANGEUR_FEATURES = [
 ];
 
 export default function OnboardingPage() {
-  const router   = useRouter();
+  const router = useRouter();
 
   // Which card is being saved right now (null = none)
   const [saving, setSaving] = useState<Role | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Called when the user clicks a role button.
@@ -37,6 +39,7 @@ export default function OnboardingPage() {
    */
   async function selectRole(role: Role) {
     setSaving(role);
+    setError(null);
     try {
       const res = await fetch("/api/user", {
         method: "POST",
@@ -44,16 +47,25 @@ export default function OnboardingPage() {
         body: JSON.stringify({ role }),
       });
 
-      if (!res.ok) throw new Error("Erreur lors de l'enregistrement");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error ?? "Erreur lors de l'enregistrement");
+      }
+
       router.push("/dashboard");
     } catch (err) {
-      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue. Veuillez reessayer."
+      );
       setSaving(null); // re-enable buttons if there was an error
     }
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
+    <Show when="signed-in">
+      <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
       {/* Logo */}
       <span className="text-[#181d19] text-2xl font-bold mb-2"> CambisteCM</span>
 
@@ -114,7 +126,17 @@ export default function OnboardingPage() {
           onSelect={() => selectRole("changeur")}
         />
       </div>
-    </main>
+
+      {error ? (
+        <p
+          role="alert"
+          className="mt-6 w-full max-w-2xl rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {error}
+        </p>
+      ) : null}
+      </main>
+    </Show>
   );
 }
 
@@ -176,7 +198,7 @@ function RoleCard({
             : "border-2 border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-60"
         }`}
       >
-        {loading ? "Chargement…" : buttonLabel}
+        {loading ? "Chargement..." : buttonLabel}
       </button>
     </div>
   );
