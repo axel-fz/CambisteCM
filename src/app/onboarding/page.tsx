@@ -64,7 +64,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <Show when="signed-in">
+    <Show when="signed-in">   
       <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
       {/* Logo */}
       <span className="text-[#181d19] text-2xl font-bold mb-2"> CambisteCM</span>
