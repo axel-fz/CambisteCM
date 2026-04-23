@@ -53,9 +53,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 px-4 py-12">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
       {/* Logo */}
-      <span className="text-white text-2xl font-bold mb-2">💱 CambisteCM</span>
+      <span className="text-[#181d19] text-2xl font-bold mb-2"> CambisteCM</span>
 
       {/* 3-step progress bar — step 1 active */}
       <div className="flex items-center gap-2 mb-10">
@@ -64,7 +64,7 @@ export default function OnboardingPage() {
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
                 step === 1
-                  ? "bg-white text-green-700 border-white"
+                  ? "bg-white text-[#005129] border-white"
                   : "bg-transparent text-white border-white/50"
               }`}
             >
@@ -78,10 +78,10 @@ export default function OnboardingPage() {
       </div>
 
       {/* Heading */}
-      <h1 className="text-white text-3xl font-bold text-center mb-2">
+      <h1 className="text-[#181d19] text-3xl font-bold text-center mb-2">
         Qui êtes-vous ?
       </h1>
-      <p className="text-green-100 text-center mb-10 max-w-sm">
+      <p className="text-[#404940] text-center mb-10 max-w-sm">
         Choisissez votre profil pour personnaliser votre expérience.
       </p>
 
@@ -108,7 +108,7 @@ export default function OnboardingPage() {
           features={CHANGEUR_FEATURES}
           buttonLabel="Je suis changeur"
           variant="filled"
-          badge="Recommandé"
+          badge="Cambiste"
           loading={saving === "changeur"}
           disabled={saving !== null}
           onSelect={() => selectRole("changeur")}

@@ -7,7 +7,7 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-700 via-green-600 to-emerald-500">
+    <main className="min-h-screen flex items-center justify-center bg-[#f7faf3]">
       <SignUp />
     </main>
   );

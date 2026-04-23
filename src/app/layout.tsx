@@ -22,19 +22,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="fr" className={`${inter.variable} h-full`}>
-        <head>
-          {/* Material Symbols for icon support across the app */}
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-          />
-        </head>
-        <body className="antialiased bg-[#f7faf3] text-slate-800 h-full font-[var(--font-inter)]">
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="fr" className={`${inter.variable} h-full`}>
+      <head>
+        {/* Material Symbols for icon support across the app */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        />
+      </head>
+      <body className="antialiased bg-[#f7faf3] text-slate-800 h-full font-[var(--font-inter)]">
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
+    </html>
   );
 }
