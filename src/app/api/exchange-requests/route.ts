@@ -6,6 +6,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
+import Changer from "@/models/Changer";
 import ExchangeRequest from "@/models/ExchangeRequest";
 
 // GET /api/exchange-requests -> list requests for the current user
@@ -22,7 +23,26 @@ export async function GET() {
       createdAt: -1,
     });
 
-    return Response.json(requests);
+    const targetIds = requests
+      .map((request) => request.targetChangerId)
+      .filter((id): id is string => Boolean(id));
+
+    const matchedChangers = targetIds.length
+      ? await Changer.find({ _id: { $in: targetIds } }).lean()
+      : [];
+
+    const changerMap = new Map(
+      matchedChangers.map((changer) => [String(changer._id), changer])
+    );
+
+    const enrichedRequests = requests.map((request) => ({
+      ...request.toObject(),
+      matchedChanger: request.targetChangerId
+        ? changerMap.get(request.targetChangerId) ?? null
+        : null,
+    }));
+
+    return Response.json(enrichedRequests);
   } catch (error) {
     console.error("GET /api/exchange-requests failed", error);
     return Response.json(

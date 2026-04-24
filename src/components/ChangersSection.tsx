@@ -276,11 +276,13 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
         </div>
       )}
 
-      <ContactModal
-        changer={selectedChanger}
-        role={role}
-        onClose={() => setSelectedChanger(null)}
-      />
+      {selectedChanger ? (
+        <ContactModal
+          changer={selectedChanger}
+          role={role}
+          onClose={() => setSelectedChanger(null)}
+        />
+      ) : null}
     </section>
   );
 }
