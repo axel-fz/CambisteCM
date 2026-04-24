@@ -20,7 +20,6 @@ interface MongooseCache {
 
 // Use a global variable so the cache survives hot-reloads in development
 declare global {
-  // eslint-disable-next-line no-var
   var mongooseCache: MongooseCache | undefined;
 }
 

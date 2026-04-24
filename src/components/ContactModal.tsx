@@ -95,13 +95,13 @@ export default function ContactModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [changer, onClose, role]);
 
-  const counterpartLabel = useMemo(() => {
+  const counterpartLabel = (() => {
     if (!changer?.role) {
       return role === "echangeur" ? "Changeur Pro" : "Échangeur";
     }
 
     return changer.role === "changeur" ? "Changeur Pro" : "Échangeur";
-  }, [changer?.role, role]);
+  })();
 
   if (!changer) {
     return null;

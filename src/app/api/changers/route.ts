@@ -8,6 +8,10 @@ import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
 import Changer from "@/models/Changer";
 import User from "@/models/User";
+import {
+  buildInitials,
+  normalizeChangerListingInput,
+} from "@/lib/changer-listing";
 
 // GET /api/changers?currency=EUR&neighborhood=Bastos&status=online
 export async function GET(req: NextRequest) {
@@ -53,39 +57,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { currency, rate, neighborhood, phone } = (await req.json()) as {
+    const body = (await req.json()) as {
       currency?: string;
       rate?: string;
       neighborhood?: string;
       phone?: string;
+      status?: "online" | "busy" | "offline";
+      isActive?: boolean;
     };
 
-    const initials = user.name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part: string) => part[0]?.toUpperCase() ?? "")
-      .slice(0, 2)
-      .join("");
+    const normalizedInput = normalizeChangerListingInput(body, {
+      currency: "EUR",
+      neighborhood: user.neighborhood,
+      phone: user.phone,
+      status: "online",
+      isActive: true,
+    });
+
+    const initials = buildInitials(user.name);
 
     const changer = await Changer.create({
       userId,
       name: user.name,
       initials,
-      neighborhood: neighborhood ?? user.neighborhood,
+      neighborhood: normalizedInput.neighborhood,
       role: user.role,
-      currency: currency ?? "EUR",
-      rate: rate ?? "",
-      phone: phone ?? user.phone,
-      status: "online",
+      currency: normalizedInput.currency,
+      rate: normalizedInput.rate,
+      phone: normalizedInput.phone,
+      status: normalizedInput.status,
       rating: 0,
       reviewCount: 0,
-      isActive: true,
+      isActive: normalizedInput.isActive,
     });
 
     return Response.json(changer, { status: 201 });
   } catch (error) {
     console.error("POST /api/changers failed", error);
+    if (error instanceof Error) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
     return Response.json(
       { error: "Failed to create changer listing" },
       { status: 500 }

@@ -9,6 +9,7 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import KpiCard from "@/components/KpiCard";
 import ChangersSection from "@/components/ChangersSection";
+import MyListingsSection from "@/components/MyListingsSection";
 
 type Role = "echangeur" | "changeur";
 
@@ -146,6 +147,8 @@ export default async function DashboardPage() {
           <KpiCard key={kpi.title} {...kpi} />
         ))}
       </section>
+
+      <MyListingsSection role={user.role} />
 
       <ChangersSection role={user.role} />
     </div>
