@@ -70,7 +70,7 @@ export default function OnboardingPage() {
       <span className="text-[#181d19] text-2xl font-bold mb-2"> CambisteCM</span>
 
       {/* 3-step progress bar — step 1 active */}
-      <div className="flex items-center gap-2 mb-10">
+     {/*  <div className="flex items-center gap-2 mb-10">
         {[1, 2, 3].map((step) => (
           <div key={step} className="flex items-center gap-2">
             <div
@@ -87,7 +87,7 @@ export default function OnboardingPage() {
             )}
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Heading */}
       <h1 className="text-[#181d19] text-3xl font-bold text-center mb-2">
