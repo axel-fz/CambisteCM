@@ -47,8 +47,9 @@ function getInitialForm(role: Role): ListingFormState {
   };
 }
 
-async function fetchListings() {
-  const response = await fetch("/api/changers/mine", { cache: "no-store" });
+async function fetchListings(role: Role) {
+  const endpoint = role === "changeur" ? "/api/changers/mine" : "/api/needs/mine";
+  const response = await fetch(endpoint, { cache: "no-store" });
   const payload = (await response.json()) as ListingItem[] | { error?: string };
 
   if (!response.ok || !Array.isArray(payload)) {
@@ -70,12 +71,13 @@ export default function MyListingsSection({ role }: { role: Role }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ListingFormState>(() => getInitialForm(role));
 
+  const apiPath = role === "changeur" ? "/api/changers" : "/api/needs";
   const listingLabel = role === "changeur" ? "offre" : "besoin";
   const sectionTitle =
-    role === "changeur" ? "Mes offres publiees" : "Mes besoins publies";
+    role === "changeur" ? "Mes offres publiées" : "Mes besoins publiés";
   const currencyLabel =
-    role === "changeur" ? "Devise proposee" : "Devise recherchee";
-  const rateLabel = role === "changeur" ? "Taux" : "Detail du besoin";
+    role === "changeur" ? "Devise proposée" : "Devise recherchée";
+  const rateLabel = role === "changeur" ? "Taux" : "Détail du besoin";
   const ratePlaceholder =
     role === "changeur" ? "655 XAF / EUR" : "Besoin de 1 000 EUR contre XAF";
 
@@ -84,7 +86,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
 
     void (async () => {
       try {
-        const payload = await fetchListings();
+        const payload = await fetchListings(role);
         if (!cancelled) {
           setListings(payload);
         }
@@ -106,14 +108,14 @@ export default function MyListingsSection({ role }: { role: Role }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [role]);
 
   async function loadListings() {
     setLoading(true);
     setError(null);
 
     try {
-      const payload = await fetchListings();
+      const payload = await fetchListings(role);
       setListings(payload);
     } catch (fetchError) {
       setError(
@@ -135,7 +137,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
     setEditingId(listing._id);
     setForm({
       currency: listing.currency,
-      rate: listing.rate,
+      rate: listing.rate || (listing as any).amount || "",
       neighborhood: listing.neighborhood,
       phone: listing.phone,
       status: listing.status,
@@ -151,7 +153,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
 
     try {
       const response = await fetch(
-        editingId ? `/api/changers/${editingId}` : "/api/changers",
+        editingId ? `${apiPath}/${editingId}` : apiPath,
         {
           method: editingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -187,7 +189,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/changers/${id}`, { method: "DELETE" });
+      const response = await fetch(`${apiPath}/${id}`, { method: "DELETE" });
       const payload = (await response.json()) as { success?: boolean; error?: string };
 
       if (!response.ok || !payload.success) {

@@ -141,37 +141,66 @@ export default async function DashboardPage() {
         ];
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="relative min-h-screen space-y-10 pb-10">
+      {/* Background Decor */}
+      <div className="pointer-events-none absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full bg-emerald-100/50 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-amber-50/50 blur-3xl" />
+
+      <header className="relative overflow-hidden rounded-[2rem] border border-white/40 bg-white/60 p-8 shadow-xl backdrop-blur-xl md:p-10">
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-medium text-[#005129]">{roleLabel}</p>
-            <h1 className="mt-1 text-3xl font-bold text-slate-800">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#005129]">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              {roleLabel} Connecté
+            </div>
+            <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
               Tableau de bord
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Découvrez les profils adaptés à votre besoin et prenez contact immédiatement.
+            <p className="mt-4 max-w-xl text-lg font-medium text-slate-500/80 leading-relaxed">
+              {role === "echangeur" 
+                ? "Gérez vos besoins de devises et connectez-vous aux meilleurs cambistes en temps réel."
+                : "Optimisez votre visibilité et gérez vos demandes d'échanges reçues avec efficacité."}
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#f7faf3] px-4 py-2 text-sm font-medium text-slate-500">
-            <span className="material-symbols-outlined text-[18px] text-[#005129]">
-              verified_user
-            </span>
-            Espace sécurisé CambisteCM
+          <div className="hidden xl:block">
+             <div className="flex items-center gap-4 rounded-3xl border border-white/60 bg-white/40 p-2 pr-6 shadow-sm backdrop-blur-md">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#005129] text-white shadow-lg shadow-emerald-900/20">
+                  <span className="material-symbols-outlined">verified_user</span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-tight text-slate-400">Statut Compte</p>
+                  <p className="text-sm font-bold text-slate-700">Profil Vérifié</p>
+                </div>
+             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.title} {...kpi} />
         ))}
       </section>
 
-      <MyListingsSection role={user.role} />
+      <div className="grid gap-10 lg:grid-cols-[1fr_auto]">
+        <div className="space-y-10">
+          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
+             <div className="p-8 md:p-10">
+                <MyListingsSection role={role} />
+             </div>
+          </section>
 
-      <ChangersSection role={user.role} />
+          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
+             <div className="p-8 md:p-10">
+                <ChangersSection role={role} />
+             </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
