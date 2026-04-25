@@ -1,13 +1,9 @@
-/**
- * app/api/exchange-requests/route.ts
- * GET  - List exchange requests for the current user.
- * POST - Create a new exchange request for the current user.
- */
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
 import Changer from "@/models/Changer";
 import ExchangeRequest from "@/models/ExchangeRequest";
+import User from "@/models/User";
 
 // GET /api/exchange-requests -> list requests for the current user
 export async function GET() {
@@ -19,10 +15,29 @@ export async function GET() {
   try {
     await connectDB();
 
-    const requests = await ExchangeRequest.find({ requesterId: userId }).sort({
-      createdAt: -1,
-    });
+    const user = await User.findOne({ clerkId: userId });
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
 
+    let requests;
+    if (user.role === "changeur") {
+      // Find all changer profiles belonging to this pro
+      const myChangerProfiles = await Changer.find({ userId }).select("_id");
+      const myChangerIds = myChangerProfiles.map((p) => p._id);
+
+      // Find requests targeting any of these profiles
+      requests = await ExchangeRequest.find({
+        targetChangerId: { $in: myChangerIds },
+      }).sort({ createdAt: -1 });
+    } else {
+      // Regular user: requests they sent
+      requests = await ExchangeRequest.find({ requesterId: userId }).sort({
+        createdAt: -1,
+      });
+    }
+
+    // Common enrichment: find changers for these requests
     const targetIds = requests
       .map((request) => request.targetChangerId)
       .filter((id): id is string => Boolean(id));
@@ -35,11 +50,23 @@ export async function GET() {
       matchedChangers.map((changer) => [String(changer._id), changer])
     );
 
+    // If pro, also enrich with requester user info
+    const requesterIds = requests.map((r) => r.requesterId);
+    const requesters =
+      user.role === "changeur" && requesterIds.length
+        ? await User.find({ clerkId: { $in: requesterIds } }).lean()
+        : [];
+
+    const userMap = new Map(
+      requesters.map((u) => [u.clerkId, u])
+    );
+
     const enrichedRequests = requests.map((request) => ({
       ...request.toObject(),
       matchedChanger: request.targetChangerId
         ? changerMap.get(request.targetChangerId) ?? null
         : null,
+      requester: userMap.get(request.requesterId) ?? null,
     }));
 
     return Response.json(enrichedRequests);

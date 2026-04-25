@@ -3,48 +3,66 @@
  * Server dashboard page that loads the user's role and matching KPIs.
  */
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
+import Changer from "@/models/Changer";
+import ExchangeRequest from "@/models/ExchangeRequest";
 import KpiCard from "@/components/KpiCard";
 import ChangersSection from "@/components/ChangersSection";
 import MyListingsSection from "@/components/MyListingsSection";
 
 type Role = "echangeur" | "changeur";
 
-interface DashboardUser {
-  role: Role;
-}
-
-interface ForMeChanger {
-  _id: string;
-}
-
-async function getDashboardUser(userId: string): Promise<DashboardUser | null> {
+async function getDashboardData(userId: string, role: Role) {
   await connectDB();
-  return User.findOne({ clerkId: userId }).lean<DashboardUser | null>();
-}
+  
+  // 1. Available counterparties count
+  const targetRole = role === "echangeur" ? "changeur" : "echangeur";
+  const availableCount = await Changer.countDocuments({
+    role: targetRole,
+    isActive: true,
+    status: { $ne: "offline" },
+  });
 
-async function getAvailableCount() {
-  const cookieStore = await cookies();
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  // 2. Performance metrics
+  let mainMetric = 0;
+  let secondaryMetric = 0;
+  let ratingMetric = "0.0";
 
-  try {
-    const response = await fetch(`${baseUrl}/api/changers/for-me`, {
-      headers: { Cookie: cookieStore.toString() },
-      cache: "no-store",
+  if (role === "echangeur") {
+    // Contacts unlocked (matched or beyond)
+    mainMetric = await ExchangeRequest.countDocuments({
+      requesterId: userId,
+      status: { $in: ["matched", "completed"] },
     });
 
-    if (!response.ok) {
-      return 0;
-    }
+    // Successful exchanges
+    secondaryMetric = await ExchangeRequest.countDocuments({
+      requesterId: userId,
+      status: "completed",
+    });
+    
+    ratingMetric = "N/A";
+  } else {
+    // For Pros: Requests received
+    const myProfiles = await Changer.find({ userId }).select("_id rating");
+    const myIds = myProfiles.map((p) => p._id);
+    
+    mainMetric = await ExchangeRequest.countDocuments({
+      targetChangerId: { $in: myIds },
+    });
 
-    const changers = (await response.json()) as ForMeChanger[];
-    return changers.length;
-  } catch {
-    return 0;
+    secondaryMetric = await ExchangeRequest.countDocuments({
+      targetChangerId: { $in: myIds },
+      status: "completed",
+    });
+
+    const totalRating = myProfiles.reduce((acc, p) => acc + p.rating, 0);
+    ratingMetric = myProfiles.length > 0 ? (totalRating / myProfiles.length).toFixed(1) : "0.0";
   }
+
+  return { availableCount, mainMetric, secondaryMetric, ratingMetric };
 }
 
 export default async function DashboardPage() {
@@ -54,68 +72,71 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const user = await getDashboardUser(userId);
+  await connectDB();
+  const user = await User.findOne({ clerkId: userId }).lean();
   if (!user) {
     redirect("/onboarding");
   }
 
-  const availableCount = await getAvailableCount();
-  const roleLabel = user.role === "echangeur" ? "Échangeur" : "Changeur Pro";
+  const role = user.role as Role;
+  const { availableCount, mainMetric, secondaryMetric, ratingMetric } = await getDashboardData(userId, role);
+  
+  const roleLabel = role === "echangeur" ? "Échangeur" : "Changeur Pro";
 
   const kpis =
-    user.role === "echangeur"
+    role === "echangeur"
       ? [
           {
             title: "Contacts débloqués",
-            value: 12,
-            subtitle: "Prises de contact directes ce mois-ci",
+            value: mainMetric,
+            subtitle: "Prises de contact directes",
             icon: "lock_open",
           },
           {
             title: "Échanges réussis",
-            value: 45,
-            subtitle: "Transactions menées à bien récemment",
+            value: secondaryMetric,
+            subtitle: "Transactions terminées",
             icon: "sync_alt",
             highlight: true,
           },
           {
-            title: "Note moyenne",
-            value: "4.8",
-            subtitle: "Basée sur les retours des derniers échanges",
-            icon: "star",
+            title: "Cambistes actifs",
+            value: availableCount,
+            subtitle: "Profils prêts à échanger",
+            icon: "group",
           },
           {
-            title: "Cambistes disponibles",
-            value: availableCount,
-            subtitle: "Profils disponibles selon votre besoin",
-            icon: "group",
+            title: "Sécurité",
+            value: "100%",
+            subtitle: "Transactions protégées",
+            icon: "shield",
           },
         ]
       : [
           {
-            title: "Revenus ce mois",
-            value: "245 000 XAF",
-            subtitle: "Estimation basée sur vos échanges récents",
+            title: "Demandes reçues",
+            value: mainMetric,
+            subtitle: "Intérêts de clients potentiels",
+            icon: "call",
+          },
+          {
+            title: "Échanges finalisés",
+            value: secondaryMetric,
+            subtitle: "Volume d'activité total",
             icon: "payments",
             highlight: true,
           },
           {
-            title: "Offres actives",
-            value: availableCount,
-            subtitle: "Profils visibles pour les contreparties",
-            icon: "storefront",
-          },
-          {
-            title: "Contacts reçus",
-            value: 18,
-            subtitle: "Demandes reçues durant les derniers jours",
-            icon: "call",
-          },
-          {
             title: "Note moyenne",
-            value: "4.9",
-            subtitle: "Confiance bâtie avec vos derniers partenaires",
+            value: ratingMetric,
+            subtitle: "Basée sur les avis clients",
             icon: "star",
+          },
+          {
+            title: "Visibilité",
+            value: availableCount > 0 ? "Active" : "Basse",
+            subtitle: "Statut de vos offres",
+            icon: "visibility",
           },
         ];
 
