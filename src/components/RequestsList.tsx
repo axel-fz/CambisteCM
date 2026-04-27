@@ -3,14 +3,22 @@
 import { useState } from "react";
 import RatingModal from "./RatingModal";
 
-interface MatchedChanger {
+interface MatchedListing {
   _id: string;
-  name: string;
+  currency: string;
+  rate?: number;
+  amount?: number;
   neighborhood: string;
   phone: string;
+  user: {
+    name: string;
+    phone: string;
+    neighborhood: string;
+  };
 }
 
 interface Requester {
+  _id: string;
   name: string;
   phone: string;
   neighborhood: string;
@@ -23,8 +31,9 @@ interface ExchangeRequestItem {
   toCurrency: string;
   status: "open" | "matched" | "completed" | "cancelled";
   createdAt: string;
-  matchedChanger: MatchedChanger | null;
+  listing: MatchedListing | null;
   requester?: Requester | null;
+  isReceived?: boolean;
 }
 
 interface RequestsListProps {
@@ -143,11 +152,18 @@ export default function RequestsList({ initialRequests, role, hideActions = fals
                     {request.amount} {request.fromCurrency} vers {request.toCurrency}
                   </h2>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[request.status]}`}
-                >
-                  {request.status}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${request.isReceived ? "bg-indigo-50 text-indigo-700" : "bg-emerald-50 text-emerald-700"}`}
+                  >
+                    {request.isReceived ? "Reçue" : "Envoyée"}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[request.status]}`}
+                  >
+                    {request.status}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-6 grid gap-4 rounded-2xl border border-slate-100 bg-[#f7faf3] p-4 sm:grid-cols-2">
@@ -164,9 +180,9 @@ export default function RequestsList({ initialRequests, role, hideActions = fals
                     {role === "echangeur" ? "Partenaire" : "Demandeur"}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">
-                    {role === "echangeur" 
-                      ? (request.matchedChanger?.name ?? "En attente")
-                      : (request.requester?.name ?? "Inconnu")}
+                    {request.isReceived
+                      ? (request.requester?.name ?? "Inconnu")
+                      : (request.listing?.user.name ?? "En attente")}
                   </p>
                 </div>
               </div>
@@ -175,20 +191,19 @@ export default function RequestsList({ initialRequests, role, hideActions = fals
               {request.status === "matched" && (
                 <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
                   <p className="text-sm font-medium text-emerald-800">
-                    {role === "echangeur" ? "Contact débloqué" : "Coordonnées du demandeur"}
+                    {request.isReceived ? "Coordonnées du demandeur" : "Contact débloqué"}
                   </p>
-                  {role === "echangeur" && request.matchedChanger && (
-                    <>
-                      <p className="mt-1 text-sm text-emerald-700">{request.matchedChanger.neighborhood}</p>
-                      <p className="mt-1 text-sm font-semibold text-emerald-800">{request.matchedChanger.phone}</p>
-                    </>
-                  )}
-                  {role === "changeur" && request.requester && (
+                  {request.isReceived && request.requester ? (
                     <>
                       <p className="mt-1 text-sm text-emerald-700">{request.requester.neighborhood || "Quartier non renseigné"}</p>
                       <p className="mt-1 text-sm font-semibold text-emerald-800">{request.requester.phone || "Téléphone non renseigné"}</p>
                     </>
-                  )}
+                  ) : request.listing ? (
+                    <>
+                      <p className="mt-1 text-sm text-emerald-700">{request.listing.neighborhood || request.listing.user.neighborhood}</p>
+                      <p className="mt-1 text-sm font-semibold text-emerald-800">{request.listing.phone || request.listing.user.phone}</p>
+                    </>
+                  ) : null}
                 </div>
               )}
 

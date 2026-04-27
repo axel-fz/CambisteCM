@@ -14,6 +14,8 @@ export interface IUser extends Document {
   neighborhood: string;
   phone: string;
   onboardingComplete: boolean;
+  rating: number;
+  reviewCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,8 +33,10 @@ const UserSchema = new Schema<IUser>(
     neighborhood: { type: String, default: "" },
     phone: { type: String, default: "" },
     onboardingComplete: { type: Boolean, default: false },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Guard against model re-compilation during Next.js hot-reloads

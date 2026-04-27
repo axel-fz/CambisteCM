@@ -2,7 +2,9 @@
  * app/api/user/route.ts
  * GET  - Returns the current user's profile from MongoDB (by clerkId).
  * POST - Creates or updates the user record; sets role from onboarding.
+ * PATCH - Updates user profile fields.
  */
+
 import { NextRequest } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
@@ -18,11 +20,13 @@ function isValidRole(role: unknown): role is Role {
 export async function GET() {
   try {
     const { userId } = await auth();
+
     if (!userId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await connectDB();
+
     const user = await User.findOne({ clerkId: userId });
 
     if (!user) {
@@ -41,30 +45,32 @@ export async function GET() {
 
 // POST /api/user -> create or update user with role from onboarding
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const clerkUser = await currentUser();
-  if (!clerkUser) {
-    return Response.json({ error: "Clerk user not found" }, { status: 401 });
-  }
-
-  const { role, neighborhood, phone } = (await req.json()) as {
-    role?: unknown;
-    neighborhood?: string;
-    phone?: string;
-  };
-
-  if (!isValidRole(role)) {
-    return Response.json(
-      { error: "role must be either 'echangeur' or 'changeur'" },
-      { status: 400 }
-    );
-  }
-
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const clerkUser = await currentUser();
+
+    if (!clerkUser) {
+      return Response.json({ error: "Clerk user not found" }, { status: 401 });
+    }
+
+    const { role, neighborhood, phone } = (await req.json()) as {
+      role?: unknown;
+      neighborhood?: string;
+      phone?: string;
+    };
+
+    if (!isValidRole(role)) {
+      return Response.json(
+        { error: "role must be either 'echangeur' or 'changeur'" },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
 
     const user = await User.findOneAndUpdate(
@@ -81,11 +87,61 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true }
     );
 
-    return Response.json(user, { status: 201 });
+    return Response.json(user);
   } catch (error) {
     console.error("POST /api/user failed", error);
     return Response.json(
       { error: "Failed to save user profile" },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/user -> update user profile details
+export async function PATCH(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { name, neighborhood, phone } = (await req.json()) as {
+      name?: string;
+      neighborhood?: string;
+      phone?: string;
+    };
+
+    await connectDB();
+
+    const updates: Record<string, string> = {};
+
+    if (name) updates.name = name;
+    if (neighborhood) updates.neighborhood = neighborhood;
+    if (phone) updates.phone = phone;
+
+    if (Object.keys(updates).length === 0) {
+      return Response.json(
+        { error: "No fields to update" },
+        { status: 400 }
+      );
+    }
+
+    const user = await User.findOneAndUpdate(
+      { clerkId: userId },
+      updates,
+      { new: true }
+    );
+
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return Response.json(user);
+  } catch (error) {
+    console.error("PATCH /api/user failed", error);
+    return Response.json(
+      { error: "Failed to update profile" },
       { status: 500 }
     );
   }

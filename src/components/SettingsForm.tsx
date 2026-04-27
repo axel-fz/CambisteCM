@@ -27,9 +27,13 @@ export default function SettingsForm({ initialUser }: SettingsFormProps) {
 
     try {
       const response = await fetch("/api/user", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+            name: form.name,
+            neighborhood: form.neighborhood,
+            phone: form.phone,
+        }),
       });
 
       if (response.ok) {
@@ -89,19 +93,6 @@ export default function SettingsForm({ initialUser }: SettingsFormProps) {
           />
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Rôle
-          </span>
-          <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value as "echangeur" | "changeur" })}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#005129]"
-          >
-            <option value="echangeur">Échangeur (Particulier)</option>
-            <option value="changeur">Changeur Pro (Cambiste)</option>
-          </select>
-        </label>
       </div>
 
       {message && (

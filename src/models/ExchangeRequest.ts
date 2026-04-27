@@ -1,12 +1,8 @@
-/**
- * models/ExchangeRequest.ts
- * Mongoose model for P2P currency exchange requests.
- */
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IExchangeRequest extends Document {
-  requesterId: string;
-  targetChangerId?: string;
+  requester: mongoose.Types.ObjectId;
+  listing: mongoose.Types.ObjectId;
   amount: number;
   fromCurrency: string;
   toCurrency: string;
@@ -17,8 +13,8 @@ export interface IExchangeRequest extends Document {
 
 const ExchangeRequestSchema = new Schema<IExchangeRequest>(
   {
-    requesterId: { type: String, required: true },
-    targetChangerId: { type: String },
+    requester: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    listing: { type: Schema.Types.ObjectId, ref: "Listing", required: true },
     amount: { type: Number, required: true },
     fromCurrency: { type: String, required: true },
     toCurrency: { type: String, required: true },

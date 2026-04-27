@@ -74,7 +74,7 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
         const query = currency
           ? `?currency=${encodeURIComponent(currency)}`
           : "";
-        const response = await fetch(`/api/changers/for-me${query}`, {
+        const response = await fetch(`/api/listings/for-me${query}`, {
           cache: "no-store",
         });
 
@@ -113,16 +113,17 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
     const normalizedNeighborhood = neighborhood.trim().toLowerCase();
 
     return changers.filter((changer) => {
+      const currentNeighborhood = (changer.neighborhood || changer.user.neighborhood || "").toLowerCase();
       const matchesNeighborhood = normalizedNeighborhood
-        ? changer.neighborhood.toLowerCase().includes(normalizedNeighborhood)
+        ? currentNeighborhood.includes(normalizedNeighborhood)
         : true;
 
       const matchesSearch = normalizedSearch
         ? [
-            changer.name,
-            changer.neighborhood,
+            changer.user.name,
+            changer.neighborhood || changer.user.neighborhood,
             changer.currency,
-            changer.rate,
+            changer.rate || changer.amount,
           ]
             .join(" ")
             .toLowerCase()
@@ -217,14 +218,14 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#005129] text-sm font-bold text-white">
-                    {changer.initials}
+                    {changer.user.name.substring(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-800">
-                      {changer.name}
+                      {changer.user.name}
                     </h3>
                     <p className="text-sm text-slate-500">
-                      {changer.neighborhood || "Quartier non renseigné"}
+                      {changer.neighborhood || changer.user.neighborhood || "Quartier non renseigné"}
                     </p>
                   </div>
                 </div>
@@ -251,7 +252,7 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
                     Taux
                   </p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">
-                    {changer.rate || "Non communiqué"}
+                    {changer.rate || changer.amount || "Non communiqué"}
                   </p>
                 </div>
 
@@ -259,7 +260,7 @@ export default function ChangersSection({ role }: ChangersSectionProps) {
                   <span className="material-symbols-outlined text-[18px] text-amber-500">
                     star
                   </span>
-                  {changer.rating.toFixed(1)} ({changer.reviewCount})
+                  {changer.user.rating.toFixed(1)} ({changer.user.reviewCount})
                 </div>
               </div>
 

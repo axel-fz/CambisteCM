@@ -1,111 +1,103 @@
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
-import Changer from "@/models/Changer";
+import Listing from "@/models/Listing";
 import ExchangeRequest from "@/models/ExchangeRequest";
 import User from "@/models/User";
 
-// GET /api/exchange-requests -> list requests for the current user
+// GET /api/exchange-requests -> list requests for the current user (sent AND received)
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     await connectDB();
 
-    const user = await User.findOne({ clerkId: userId });
+    const user = await User.findOne({ clerkId });
     if (!user) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    let requests;
-    if (user.role === "changeur") {
-      // Find all changer profiles belonging to this pro
-      const myChangerProfiles = await Changer.find({ userId }).select("_id");
-      const myChangerIds = myChangerProfiles.map((p) => p._id);
+    // 1. Find my own listing IDs (to find requests received)
+    const myListingIds = await Listing.find({ user: user._id }).distinct("_id");
 
-      // Find requests targeting any of these profiles
-      requests = await ExchangeRequest.find({
-        targetChangerId: { $in: myChangerIds },
-      }).sort({ createdAt: -1 });
-    } else {
-      // Regular user: requests they sent
-      requests = await ExchangeRequest.find({ requesterId: userId }).sort({
-        createdAt: -1,
-      });
-    }
+    // 2. Find requests where I am either the requester OR the target of a listing
+    const requests = await ExchangeRequest.find({
+      $or: [{ requester: user._id }, { listing: { $in: myListingIds } }],
+    })
+      .populate("requester", "name email phone neighborhood")
+      .populate({
+        path: "listing",
+        populate: {
+          path: "user",
+          select: "name phone neighborhood rating reviewCount",
+        },
+      })
+      .select("+type") // Include type field in response
+      .sort({ createdAt: -1 });
 
-    // Common enrichment: find changers for these requests
-    const targetIds = requests
-      .map((request) => request.targetChangerId)
-      .filter((id): id is string => Boolean(id));
-
-    const matchedChangers = targetIds.length
-      ? await Changer.find({ _id: { $in: targetIds } }).lean()
-      : [];
-
-    const changerMap = new Map(
-      matchedChangers.map((changer) => [String(changer._id), changer])
-    );
-
-    // If pro, also enrich with requester user info
-    const requesterIds = requests.map((r) => r.requesterId);
-    const requesters =
-      user.role === "changeur" && requesterIds.length
-        ? await User.find({ clerkId: { $in: requesterIds } }).lean()
-        : [];
-
-    const userMap = new Map(
-      requesters.map((u) => [u.clerkId, u])
-    );
-
-    const enrichedRequests = requests.map((request) => ({
-      ...request.toObject(),
-      matchedChanger: request.targetChangerId
-        ? changerMap.get(request.targetChangerId) ?? null
-        : null,
-      requester: userMap.get(request.requesterId) ?? null,
-    }));
+    // Mark each request as "received" or "sent" for the frontend
+    const enrichedRequests = requests.map((req) => {
+      const isReceived = myListingIds.some(
+        (id) => id.toString() === req.listing._id.toString(),
+      );
+      return {
+        ...req.toObject(),
+        isReceived,
+      };
+    });
 
     return Response.json(enrichedRequests);
   } catch (error) {
     console.error("GET /api/exchange-requests failed", error);
     return Response.json(
       { error: "Failed to load exchange requests" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // POST /api/exchange-requests -> create a new request
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { amount, fromCurrency, toCurrency, targetChangerId } = (await req.json()) as {
-    amount?: number;
-    fromCurrency?: string;
-    toCurrency?: string;
-    targetChangerId?: string;
-  };
+  const { amount, fromCurrency, toCurrency, listingId } =
+    (await req.json()) as {
+      amount?: number;
+      fromCurrency?: string;
+      toCurrency?: string;
+      listingId?: string;
+    };
 
-  if (!amount || !fromCurrency || !toCurrency) {
+  if (!amount || !fromCurrency || !toCurrency || !listingId) {
     return Response.json(
-      { error: "amount, fromCurrency, and toCurrency are required" },
-      { status: 400 }
+      { error: "amount, fromCurrency, toCurrency, and listingId are required" },
+      { status: 400 },
     );
   }
 
   try {
     await connectDB();
 
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check if listing exists
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      return Response.json({ error: "Listing not found" }, { status: 404 });
+    }
+
     const request = await ExchangeRequest.create({
-      requesterId: userId,
-      targetChangerId: targetChangerId ?? undefined,
+      requester: user._id,
+      listing: listingId,
       amount,
       fromCurrency,
       toCurrency,
@@ -117,7 +109,7 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/exchange-requests failed", error);
     return Response.json(
       { error: "Failed to create exchange request" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

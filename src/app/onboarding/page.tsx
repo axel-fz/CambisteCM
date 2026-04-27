@@ -20,6 +20,7 @@ export default async function OnboardingPage() {
   const user = await User.findOne({ clerkId: userId }).lean();
 
   // If already onboarded, don't show this page again
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (user && (user as any).onboardingComplete) {
     redirect("/dashboard");
   }

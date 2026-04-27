@@ -10,16 +10,21 @@ type Role = "echangeur" | "changeur";
 
 export interface ContactChanger {
   _id: string;
-  name: string;
-  initials: string;
-  neighborhood: string;
+  type: "OFFER" | "NEED"; // Must be included in API response
+  user: {
+    _id: string;
+    name: string;
+    neighborhood: string;
+    phone: string;
+    rating: number;
+    reviewCount: number;
+  };
   currency: string;
-  rate: string;
-  role?: Role;
+  rate?: number;
+  amount?: number;
   status: "online" | "busy" | "offline";
-  rating: number;
-  reviewCount: number;
-  phone: string;
+  neighborhood: string; // Listing-specific neighborhood
+  phone: string; // Listing-specific phone
 }
 
 interface ContactModalProps {
@@ -52,7 +57,11 @@ function formatWhatsAppPhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
-function getDefaultCurrencies(role: Role, changer: ContactChanger) {
+function getDefaultCurrencies(role: Role, changer: ContactChanger | null) {
+  if (!changer) {
+    return { fromCurrency: "XAF", toCurrency: "" };
+  }
+
   if (role === "echangeur") {
     return {
       fromCurrency: "XAF",
@@ -60,8 +69,16 @@ function getDefaultCurrencies(role: Role, changer: ContactChanger) {
     };
   }
 
+  // Pro contacting a User Need
+  if (changer.type === "NEED") {
+    return {
+      fromCurrency: "XAF",
+      toCurrency: changer.currency,
+    };
+  }
+
   return {
-    fromCurrency: "",
+    fromCurrency: changer.currency,
     toCurrency: "XAF",
   };
 }
@@ -71,17 +88,28 @@ export default function ContactModal({
   role,
   onClose,
 }: ContactModalProps) {
+  // Early return if no changer
+  if (!changer) {
+    return null;
+  }
+
   const defaultCurrencies = useMemo(
     () => getDefaultCurrencies(role, changer),
-    [changer, role]
+    [changer, role],
   );
 
-  const [amount, setAmount] = useState("");
-  const [fromCurrency, setFromCurrency] = useState(defaultCurrencies.fromCurrency);
+  const [amount, setAmount] = useState(
+    changer.type === "NEED" ? String(changer.amount || "") : "",
+  );
+  const [fromCurrency, setFromCurrency] = useState(
+    defaultCurrencies.fromCurrency,
+  );
   const [toCurrency, setToCurrency] = useState(defaultCurrencies.toCurrency);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(null);
+  const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(
+    null,
+  );
   const [contactPhone, setContactPhone] = useState("");
 
   useEffect(() => {
@@ -95,22 +123,16 @@ export default function ContactModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [changer, onClose, role]);
 
-  const counterpartLabel = (() => {
-    if (!changer?.role) {
-      return role === "echangeur" ? "Changeur Pro" : "Échangeur";
-    }
+  const counterpartLabel =
+    changer.type === "OFFER" ? "Changeur Pro" : "Échangeur (Individuel)";
 
-    return changer.role === "changeur" ? "Changeur Pro" : "Échangeur";
-  })();
-
-  if (!changer) {
-    return null;
-  }
-
-  const phone = contactPhone || changer.phone || "Non renseigné";
-  const whatsappPhone = formatWhatsAppPhone(contactPhone || changer.phone);
+  const phone =
+    contactPhone || changer.phone || changer.user.phone || "Non renseigné";
+  const whatsappPhone = formatWhatsAppPhone(
+    contactPhone || changer.phone || changer.user.phone,
+  );
   const requestCurrencyLabel =
-    role === "echangeur" ? "Devise proposée" : "Devise recherchée";
+    changer.type === "OFFER" ? "Devise proposée" : "Devise recherchée";
 
   async function handleSubmit() {
     if (!amount || !fromCurrency || !toCurrency) {
@@ -129,7 +151,7 @@ export default function ContactModal({
           amount: Number(amount),
           fromCurrency,
           toCurrency,
-          targetChangerId: changer._id,
+          listingId: changer._id,
         }),
       });
 
@@ -141,7 +163,7 @@ export default function ContactModal({
         throw new Error(
           "error" in createPayload && createPayload.error
             ? createPayload.error
-            : "Impossible de créer la demande."
+            : "Impossible de créer la demande.",
         );
       }
 
@@ -150,16 +172,19 @@ export default function ContactModal({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ targetChangerId: changer._id }),
-        }
+          body: JSON.stringify({ listingId: changer._id }),
+        },
       );
 
-      const contactPayload = (await contactResponse.json()) as
-        | { request?: CreatedRequest; phone?: string; error?: string };
+      const contactPayload = (await contactResponse.json()) as {
+        request?: CreatedRequest;
+        phone?: string;
+        error?: string;
+      };
 
       if (!contactResponse.ok || !contactPayload.request) {
         throw new Error(
-          contactPayload.error ?? "Impossible de récupérer le contact."
+          contactPayload.error ?? "Impossible de récupérer le contact.",
         );
       }
 
@@ -169,7 +194,7 @@ export default function ContactModal({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Une erreur est survenue lors de la création de la demande."
+          : "Une erreur est survenue lors de la création de la demande.",
       );
     } finally {
       setSubmitting(false);
@@ -198,17 +223,17 @@ export default function ContactModal({
           <div>
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#005129] text-lg font-bold text-white">
-                {changer.initials}
+                {changer.user.name.substring(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-[#005129]">
                   {counterpartLabel}
                 </p>
                 <h3 className="text-xl font-bold text-slate-800">
-                  {changer.name}
+                  {changer.user.name}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {changer.neighborhood}
+                  {changer.neighborhood || changer.user.neighborhood}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <span
@@ -221,7 +246,8 @@ export default function ContactModal({
                     <span className="material-symbols-outlined text-[18px] text-amber-500">
                       star
                     </span>
-                    {changer.rating.toFixed(1)} ({changer.reviewCount})
+                    {changer.user.rating.toFixed(1)} ({changer.user.reviewCount}
+                    )
                   </span>
                 </div>
               </div>
@@ -241,7 +267,7 @@ export default function ContactModal({
                   Taux
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-800">
-                  {changer.rate || "Non communiqué"}
+                  {changer.rate || changer.amount || "Non communiqué"}
                 </p>
               </div>
             </div>
@@ -251,7 +277,8 @@ export default function ContactModal({
                 Demande d&apos;échange
               </h4>
               <p className="mt-2 text-sm text-slate-500">
-                Enregistrez votre demande pour suivre l&apos;échange dans l&apos;application.
+                Enregistrez votre demande pour suivre l&apos;échange dans
+                l&apos;application.
               </p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -369,8 +396,8 @@ export default function ContactModal({
             ) : (
               <div className="mt-4 rounded-2xl border border-slate-100 bg-[#f7faf3] p-4">
                 <p className="text-sm text-slate-500">
-                  Créez une demande d&apos;échange pour enregistrer votre intention et
-                  débloquer les coordonnées du partenaire.
+                  Créez une demande d&apos;échange pour enregistrer votre
+                  intention et débloquer les coordonnées du partenaire.
                 </p>
               </div>
             )}

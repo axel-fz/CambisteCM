@@ -48,10 +48,8 @@ export default function OnboardingFlow() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
       <div className="mb-8 flex flex-col items-center">
-        <div className="h-12 w-12 rounded-2xl bg-[#005129] flex items-center justify-center shadow-lg shadow-emerald-900/20 mb-4">
-           <span className="material-symbols-outlined text-white text-2xl">account_balance_wallet</span>
-        </div>
-        <span className="text-[#181d19] text-3xl font-black tracking-tight">CambisteCM</span>
+        
+        <span className="text-[#005129] text-3xl font-black tracking-tight">Cambiste <span className="text-amber-500  ">CM</span></span>
       </div>
 
       <h1 className="text-[#181d19] text-4xl font-extrabold text-center mb-2 tracking-tight">
@@ -81,7 +79,7 @@ export default function OnboardingFlow() {
           features={CHANGEUR_FEATURES}
           buttonLabel="Je suis changeur"
           variant="filled"
-          badge="Plus Populaire"
+          badge="Cambiste"
           loading={saving === "changeur"}
           disabled={saving !== null}
           onSelect={() => selectRole("changeur")}
@@ -100,6 +98,7 @@ export default function OnboardingFlow() {
 function RoleCard({
   title, icon, description, features,
   buttonLabel, variant, badge, loading, disabled, onSelect,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <div className={`relative flex-1 rounded-[2.5rem] border border-white/40 bg-white/60 p-8 shadow-2xl backdrop-blur-xl flex flex-col gap-6 transition-all hover:-translate-y-2 ${

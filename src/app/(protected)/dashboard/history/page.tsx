@@ -1,46 +1,49 @@
 import { auth } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import Changer from "@/models/Changer";
+import Listing from "@/models/Listing";
 import ExchangeRequest from "@/models/ExchangeRequest";
 import RequestsList from "@/components/RequestsList";
 
-async function getHistory(userId: string, role: string) {
+async function getHistory(clerkId: string) {
   await connectDB();
   
-  let requests;
-  if (role === "changeur") {
-    const myChangerProfiles = await Changer.find({ userId }).select("_id");
-    const myChangerIds = myChangerProfiles.map((p) => p._id);
+  const user = await User.findOne({ clerkId });
+  if (!user) return [];
 
-    requests = await ExchangeRequest.find({
-      targetChangerId: { $in: myChangerIds },
-      status: { $in: ["completed", "cancelled"] },
-    }).sort({ updatedAt: -1 });
-  } else {
-    requests = await ExchangeRequest.find({
-      requesterId: userId,
-      status: { $in: ["completed", "cancelled"] },
-    }).sort({ updatedAt: -1 });
-  }
+  // Find my own listing IDs (to find requests received)
+  const myListingIds = await Listing.find({ user: user._id }).distinct("_id");
 
-  // Enrichment (Simplified for History)
-  const targetIds = requests.map((r) => r.targetChangerId).filter(Boolean);
-  const changers = await Changer.find({ _id: { $in: targetIds } }).lean();
-  const changerMap = new Map(changers.map((c) => [String(c._id), c]));
+  // Find requests where I am either the requester OR the target of a listing
+  // AND status is completed or cancelled
+  const requests = await ExchangeRequest.find({
+    $or: [
+      { requester: user._id },
+      { listing: { $in: myListingIds } }
+    ],
+    status: { $in: ["completed", "cancelled"] }
+  })
+  .populate("requester", "name email phone neighborhood")
+  .populate({
+    path: "listing",
+    populate: { path: "user", select: "name phone neighborhood rating reviewCount" }
+  })
+  .sort({ updatedAt: -1 });
 
-  const requesterIds = requests.map((r) => r.requesterId);
-  const requesters = await User.find({ clerkId: { $in: requesterIds } }).lean();
-  const userMap = new Map(requesters.map((u) => [u.clerkId, u]));
+  // Mark each request as "received" or "sent" for the frontend
+  const enrichedRequests = requests.map(req => {
+    const isReceived = myListingIds.some(id => id.toString() === req.listing?._id.toString());
+    return {
+      ...req.toObject(),
+      isReceived,
+      _id: req._id.toString(),
+      createdAt: req.createdAt.toISOString(),
+      updatedAt: req.updatedAt.toISOString(),
+    };
+  });
 
-  return requests.map((r) => ({
-    ...r.toObject(),
-    matchedChanger: r.targetChangerId ? changerMap.get(String(r.targetChangerId)) : null,
-    requester: userMap.get(r.requesterId),
-    createdAt: r.createdAt.toISOString(),
-  }));
+  return enrichedRequests;
 }
 
 export default async function HistoryPage() {
@@ -56,7 +59,7 @@ export default async function HistoryPage() {
     redirect("/onboarding");
   }
 
-  const requests = await getHistory(userId, user.role);
+  const requests = await getHistory(userId);
 
   return (
     <div className="space-y-8">
@@ -67,7 +70,7 @@ export default async function HistoryPage() {
         </p>
       </section>
 
-      <RequestsList initialRequests={requests} role={user.role} hideActions={true} />
+      <RequestsList initialRequests={requests as any} role={user.role} hideActions={true} />
     </div>
   );
 }

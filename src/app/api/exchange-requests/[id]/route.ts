@@ -1,14 +1,16 @@
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/mongodb";
+import Listing from "@/models/Listing";
 import ExchangeRequest from "@/models/ExchangeRequest";
+import User from "@/models/User";
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,21 +19,16 @@ export async function DELETE(
   try {
     await connectDB();
 
-    // Find the request
+    const user = await User.findOne({ clerkId });
+    if (!user) return Response.json({ error: "User not found" }, { status: 404 });
+
     const request = await ExchangeRequest.findById(id);
 
     if (!request) {
       return Response.json({ error: "Request not found" }, { status: 404 });
     }
 
-    // Only the requester can delete the request
-    // Or maybe the target changer can also dismiss it? 
-    // Usually "Mes demandes" refers to the owner of the view.
-    // Let's check if the userId matches either requester or target changer (via their profiles)
-    // For now, let's allow the requester to delete.
-    if (request.requesterId !== userId) {
-        // We should also check if the user is the target changer
-        // But for simplicity and based on "Mes demandes", the requester owns the request entry.
+    if (request.requester.toString() !== user._id.toString()) {
         return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -51,8 +48,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -69,18 +66,19 @@ export async function PATCH(
   try {
     await connectDB();
 
-    const request = await ExchangeRequest.findById(id);
+    const user = await User.findOne({ clerkId });
+    if (!user) return Response.json({ error: "User not found" }, { status: 404 });
+
+    const request = await ExchangeRequest.findById(id).populate("listing");
     if (!request) {
       return Response.json({ error: "Request not found" }, { status: 404 });
     }
 
-    // Both requester and target changer can update status (ideally)
-    // But let's verify ownership
-    const myChangerProfiles = await Changer.find({ userId }).select("_id");
-    const myChangerIds = myChangerProfiles.map((p) => String(p._id));
+    const listing = request.listing as any;
     
-    const isOwner = request.requesterId === userId || 
-                    (request.targetChangerId && myChangerIds.includes(String(request.targetChangerId)));
+    // Ownership check
+    const isOwner = request.requester.toString() === user._id.toString() || 
+                    (listing && listing.user.toString() === user._id.toString());
 
     if (!isOwner) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
@@ -89,14 +87,19 @@ export async function PATCH(
     request.status = status;
     await request.save();
 
-    // If completed and rating provided, update the changer's rating
-    if (status === "completed" && rating && request.targetChangerId) {
-        const changer = await Changer.findById(request.targetChangerId);
-        if (changer) {
-            const currentTotalRating = changer.rating * changer.reviewCount;
-            changer.reviewCount += 1;
-            changer.rating = (currentTotalRating + rating) / changer.reviewCount;
-            await changer.save();
+    // If completed and rating provided, update the target user's rating
+    if (status === "completed" && rating && listing) {
+        const targetUser = await User.findById(listing.user);
+        if (targetUser) {
+            const currentTotalRating = (targetUser.rating || 0) * (targetUser.reviewCount || 0);
+            targetUser.reviewCount = (targetUser.reviewCount || 0) + 1;
+            targetUser.rating = (currentTotalRating + rating) / targetUser.reviewCount;
+            await targetUser.save();
+            
+            // Also update the listing's cached rating
+            listing.rating = targetUser.rating;
+            listing.reviewCount = targetUser.reviewCount;
+            await listing.save();
         }
     }
 

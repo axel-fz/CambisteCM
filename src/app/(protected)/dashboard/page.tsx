@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
-import Changer from "@/models/Changer";
+import Listing from "@/models/Listing";
 import ExchangeRequest from "@/models/ExchangeRequest";
 import KpiCard from "@/components/KpiCard";
 import ChangersSection from "@/components/ChangersSection";
@@ -18,9 +18,9 @@ async function getDashboardData(userId: string, role: Role) {
   await connectDB();
   
   // 1. Available counterparties count
-  const targetRole = role === "echangeur" ? "changeur" : "echangeur";
-  const availableCount = await Changer.countDocuments({
-    role: targetRole,
+  const targetType = role === "echangeur" ? "OFFER" : "NEED";
+  const availableCount = await Listing.countDocuments({
+    type: targetType,
     isActive: true,
     status: { $ne: "offline" },
   });
@@ -32,34 +32,35 @@ async function getDashboardData(userId: string, role: Role) {
 
   if (role === "echangeur") {
     // Contacts unlocked (matched or beyond)
+    const userDoc = await User.findOne({ clerkId: userId });
     mainMetric = await ExchangeRequest.countDocuments({
-      requesterId: userId,
+      requester: userDoc?._id,
       status: { $in: ["matched", "completed"] },
     });
 
     // Successful exchanges
     secondaryMetric = await ExchangeRequest.countDocuments({
-      requesterId: userId,
+      requester: userDoc?._id,
       status: "completed",
     });
     
     ratingMetric = "N/A";
   } else {
     // For Pros: Requests received
-    const myProfiles = await Changer.find({ userId }).select("_id rating");
+    const userDoc = await User.findOne({ clerkId: userId });
+    const myProfiles = await Listing.find({ user: userDoc?._id }).select("_id rating");
     const myIds = myProfiles.map((p) => p._id);
     
     mainMetric = await ExchangeRequest.countDocuments({
-      targetChangerId: { $in: myIds },
+      listing: { $in: myIds },
     });
 
     secondaryMetric = await ExchangeRequest.countDocuments({
-      targetChangerId: { $in: myIds },
+      listing: { $in: myIds },
       status: "completed",
     });
 
-    const totalRating = myProfiles.reduce((acc, p) => acc + p.rating, 0);
-    ratingMetric = myProfiles.length > 0 ? (totalRating / myProfiles.length).toFixed(1) : "0.0";
+    ratingMetric = userDoc?.rating ? userDoc.rating.toFixed(1) : "0.0";
   }
 
   return { availableCount, mainMetric, secondaryMetric, ratingMetric };

@@ -8,7 +8,8 @@ type ListingStatus = "online" | "busy" | "offline";
 interface ListingItem {
   _id: string;
   currency: string;
-  rate: string;
+  rate?: number;
+  amount?: number;
   neighborhood: string;
   phone: string;
   status: ListingStatus;
@@ -47,9 +48,8 @@ function getInitialForm(role: Role): ListingFormState {
   };
 }
 
-async function fetchListings(role: Role) {
-  const endpoint = role === "changeur" ? "/api/changers/mine" : "/api/needs/mine";
-  const response = await fetch(endpoint, { cache: "no-store" });
+async function fetchListings() {
+  const response = await fetch("/api/listings/mine", { cache: "no-store" });
   const payload = (await response.json()) as ListingItem[] | { error?: string };
 
   if (!response.ok || !Array.isArray(payload)) {
@@ -71,7 +71,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ListingFormState>(() => getInitialForm(role));
 
-  const apiPath = role === "changeur" ? "/api/changers" : "/api/needs";
+  const apiPath = "/api/listings";
   const listingLabel = role === "changeur" ? "offre" : "besoin";
   const sectionTitle =
     role === "changeur" ? "Mes offres publiées" : "Mes besoins publiés";
@@ -86,7 +86,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
 
     void (async () => {
       try {
-        const payload = await fetchListings(role);
+        const payload = await fetchListings();
         if (!cancelled) {
           setListings(payload);
         }
@@ -115,7 +115,7 @@ export default function MyListingsSection({ role }: { role: Role }) {
     setError(null);
 
     try {
-      const payload = await fetchListings(role);
+      const payload = await fetchListings();
       setListings(payload);
     } catch (fetchError) {
       setError(
