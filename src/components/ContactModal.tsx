@@ -203,18 +203,18 @@ export default function ContactModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4 py-8"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:px-4 sm:py-8"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl border border-slate-100 bg-white  p-6 shadow-2xl transition-all animate-in fade-in zoom-in duration-200"
+        className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-slate-100 bg-white p-5 shadow-2xl sm:p-6 transition-all animate-in fade-in slide-in-from-bottom-4 sm:zoom-in duration-200"
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Fermer"
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500  transition-colors hover:bg-slate-200 "
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200"
         >
           <span className="material-symbols-outlined text-xl">close</span>
         </button>

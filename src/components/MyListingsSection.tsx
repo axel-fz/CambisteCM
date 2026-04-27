@@ -213,7 +213,8 @@ export default function MyListingsSection({ role }: { role: Role }) {
   }
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]"> <article className="rounded-2xl border border-slate-100  bg-white  p-6 shadow-sm transition-colors">
+    <section className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <article className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-colors">
         <div>
           <h2 className="text-xl font-bold text-slate-800 "> {editingId ? `Modifier mon ${listingLabel}` : `Publier un ${listingLabel}`}
           </h2>
