@@ -33,22 +33,40 @@ export default function OnboardingFlow() {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
         throw new Error(data?.error ?? "Erreur lors de l'enregistrement");
       }
 
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue.");
+      setError(
+        err instanceof Error ? err.message : "Une erreur est survenue."
+      );
       setSaving(null);
     }
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12"> <div className="mb-8 flex flex-col items-center">
-        
-        <span className="text-[#005129] text-3xl font-black tracking-tight">Cambiste<span className="text-[#c6c10b] mx-0">CM</span></span>
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
+      {/* Back arrow + logo */}
+      <div className="mb-8 flex flex-col items-center gap-4">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="self-start flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#005129] transition-colors"
+        >
+          <span className="material-symbols-outlined text-xl">
+            arrow_back
+          </span>
+          <span>Retour à l&apos;accueil</span>
+        </button>
+
+        <span className="text-[#005129] text-3xl font-black tracking-tight">
+          Cambiste<span className="text-[#c6c10b] mx-0">CM</span>
+        </span>
       </div>
 
       <h1 className="text-[#181d19] text-4xl font-extrabold text-center mb-2 tracking-tight">
@@ -94,30 +112,55 @@ export default function OnboardingFlow() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function RoleCard({
-  title, icon, description, features,
-  buttonLabel, variant, badge, loading, disabled, onSelect,
+  title,
+  icon,
+  description,
+  features,
+  buttonLabel,
+  variant,
+  badge,
+  loading,
+  disabled,
+  onSelect,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
-    <div className={`relative flex-1 rounded-[2.5rem] border border-white/40 bg-white/60 p-8 shadow-2xl backdrop-blur-xl flex flex-col gap-6 transition-all hover:-translate-y-2 ${
+    <div
+      className={`relative flex-1 rounded-[2.5rem] border border-white/40 bg-white/60 p-8 shadow-2xl backdrop-blur-xl flex flex-col gap-6 transition-all hover:-translate-y-2 ${
         variant === "filled" ? "ring-4 ring-emerald-500/10" : ""
-    }`}>
+      }`}
+    >
       {badge && (
         <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
           {badge}
         </span>
       )}
 
-      <div className="flex items-center gap-4"> <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center shadow-inner">
-          <span className="material-symbols-outlined text-[#005129] text-3xl">{icon}</span>
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center shadow-inner">
+          <span className="material-symbols-outlined text-[#005129] text-3xl">
+            {icon}
+          </span>
         </div>
-        <h2 className="text-2xl font-black text-slate-800 tracking-tight">{title}</h2>
+        <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+          {title}
+        </h2>
       </div>
 
-      <p className="text-slate-500 font-medium leading-relaxed">{description}</p> <ul className="space-y-3 mt-2">
+      <p className="text-slate-500 font-medium leading-relaxed">
+        {description}
+      </p>
+      <ul className="space-y-3 mt-2">
         {features.map((feat: string) => (
-          <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-600"> <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+          <li
+            key={feat}
+            className="flex items-center gap-3 text-sm font-bold text-slate-600"
+          >
+            <span className="material-symbols-outlined text-emerald-500 text-xl">
+              check_circle
+            </span>
             {feat}
           </li>
         ))}

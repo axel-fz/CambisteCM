@@ -57,45 +57,52 @@
   }
 }
 
+@keyframes spin-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
-        @keyframes spin-light {
-          0%   { --angle: 0deg; }
-          100% { --angle: 360deg; }
-        }
+/* Wrapper */
+.shiny-border {
+  position: relative;
+  display: inline-block;
+  border-radius: 9999px; /* full pill */
+}
 
-        @property --angle {
-          syntax: '<angle>';
-          initial-value: 0deg;
-          inherits: false;
-        }
+/* Rotating light ring */
+.shiny-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(175, 247, 7, 0.9) 40deg,
+    transparent 80deg,
+    transparent 360deg
+  );
 
-        .shine-btn {
-          position: relative;
-          z-index: 0;
-        }
+  animation: spin-border 2.5s linear infinite;
+  z-index: 0;
+}
 
-        .shine-btn::before {
-          content: '';
-          position: absolute;
-          inset: -2px;
-          border-radius: 9999px;
-          background: conic-gradient(
-            from var(--angle),
-            transparent 70%,
-            #e4e12e  80%,
-            #ece803  88%,
-            #ece803  94%,
-            transparent 100%
-          );
-          animation: spin-light 2s linear infinite;
-          z-index: -1;
-        }
+/* Inner mask (keeps button clean inside) */
+.shiny-border::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: inherit;
+  border-radius: inherit;
+  z-index: 1;
+}
 
-        .shine-btn::after {
-          content: '';
-          position: absolute;
-          inset: 2px;
-          border-radius: 9999px;
-          background: inherit;
-          z-index: -1;
-        }
+/* Keep text above everything */
+.shiny-border > * {
+  position: relative;
+  z-index: 2;
+}

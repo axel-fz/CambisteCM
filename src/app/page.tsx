@@ -166,7 +166,7 @@ export default function LandingPage() {
               <Show when="signed-out">
                 <Link
                   href="/sign-up"
-                  className="bg-white text-[#005129] font-bold px-8 py-4 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-lg"
+                  className="bg-white text-[#005129] font-bold px-8 py-4 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors shadow-lg spin-border"
                 >
                   Démarrer gratuitement
                 </Link>
