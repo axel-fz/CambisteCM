@@ -5,6 +5,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Role = "echangeur" | "changeur";
 
@@ -93,6 +94,8 @@ export default function ContactModal({
     return null;
   }
 
+  const queryClient = useQueryClient();
+
   const defaultCurrencies = useMemo(
     () => getDefaultCurrencies(role, changer),
     [changer, role],
@@ -105,12 +108,8 @@ export default function ContactModal({
     defaultCurrencies.fromCurrency,
   );
   const [toCurrency, setToCurrency] = useState(defaultCurrencies.toCurrency);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(
-    null,
-  );
   const [contactPhone, setContactPhone] = useState("");
+  const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(null);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -118,7 +117,6 @@ export default function ContactModal({
         onClose();
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [changer, onClose, role]);
@@ -134,17 +132,15 @@ export default function ContactModal({
   const requestCurrencyLabel =
     changer.type === "OFFER" ? "Devise proposée" : "Devise recherchée";
 
-  async function handleSubmit() {
-    if (!amount || !fromCurrency || !toCurrency || !changer) {
-      setError("Veuillez renseigner le montant et les deux devises.");
-      return;
-    }
+  // ── TanStack Mutation ────────────────────────────────────────────────────
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!amount || !fromCurrency || !toCurrency) {
+        throw new Error("Veuillez renseigner le montant et les deux devises.");
+      }
 
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const createResponse = await fetch("/api/exchange-requests", {
+      // Step 1: create exchange request
+      const createRes = await fetch("/api/exchange-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -154,12 +150,8 @@ export default function ContactModal({
           listingId: changer._id,
         }),
       });
-
-      const createPayload = (await createResponse.json()) as
-        | CreatedRequest
-        | { error?: string };
-
-      if (!createResponse.ok || !("_id" in createPayload)) {
+      const createPayload = (await createRes.json()) as CreatedRequest | { error?: string };
+      if (!createRes.ok || !("_id" in createPayload)) {
         throw new Error(
           "error" in createPayload && createPayload.error
             ? createPayload.error
@@ -167,7 +159,8 @@ export default function ContactModal({
         );
       }
 
-      const contactResponse = await fetch(
+      // Step 2: unlock contact
+      const contactRes = await fetch(
         `/api/exchange-requests/${createPayload._id}/contact`,
         {
           method: "POST",
@@ -175,31 +168,23 @@ export default function ContactModal({
           body: JSON.stringify({ listingId: changer._id }),
         },
       );
-
-      const contactPayload = (await contactResponse.json()) as {
+      const contactPayload = (await contactRes.json()) as {
         request?: CreatedRequest;
         phone?: string;
         error?: string;
       };
-
-      if (!contactResponse.ok || !contactPayload.request) {
-        throw new Error(
-          contactPayload.error ?? "Impossible de récupérer le contact.",
-        );
+      if (!contactRes.ok || !contactPayload.request) {
+        throw new Error(contactPayload.error ?? "Impossible de récupérer le contact.");
       }
 
-      setCreatedRequest(contactPayload.request);
-      setContactPhone(contactPayload.phone ?? changer.phone);
-    } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Une erreur est survenue lors de la création de la demande.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
+      return { request: contactPayload.request, phone: contactPayload.phone ?? changer.phone };
+    },
+    onSuccess: ({ request, phone: resolvedPhone }) => {
+      setCreatedRequest(request);
+      setContactPhone(resolvedPhone);
+      void queryClient.invalidateQueries({ queryKey: ["exchange-requests"] });
+    },
+  });
 
   return (
     <div
@@ -318,22 +303,22 @@ export default function ContactModal({
                 </label>
               </div>
 
-              {error ? (
+              {mutation.isError && (
                 <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
+                  {(mutation.error as Error).message}
                 </p>
-              ) : null}
+              )}
 
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f59e0b] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   receipt_long
                 </span>
-                {submitting
+                {mutation.isPending
                   ? "Création de la demande..."
                   : "Créer la demande et afficher le contact"}
               </button>

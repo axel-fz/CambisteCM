@@ -5,6 +5,7 @@
  */
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import QueryProvider from "@/components/QueryProvider";
 import "./globals.css";
 export const metadata: Metadata = {
   title: "CambisteCM — Échange de devises P2P",
@@ -33,7 +34,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased bg-[#f7faf3] text-slate-800  h-full transition-colors duration-300">
         <ClerkProvider>
+          <QueryProvider>
             {children}
+          </QueryProvider>
         </ClerkProvider>
       </body>
     </html>
