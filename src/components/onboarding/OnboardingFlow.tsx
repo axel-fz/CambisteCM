@@ -46,10 +46,9 @@ export default function OnboardingFlow() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12">
-      <div className="mb-8 flex flex-col items-center">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#f7faf3] px-4 py-12"> <div className="mb-8 flex flex-col items-center">
         
-        <span className="text-[#005129] text-3xl font-black tracking-tight">Cambiste <span className="text-amber-500  ">CM</span></span>
+        <span className="text-[#005129] text-3xl font-black tracking-tight">Cambiste<span className="text-[#c6c10b] mx-0">CM</span></span>
       </div>
 
       <h1 className="text-[#181d19] text-4xl font-extrabold text-center mb-2 tracking-tight">
@@ -110,19 +109,15 @@ function RoleCard({
         </span>
       )}
 
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center shadow-inner">
+      <div className="flex items-center gap-4"> <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center shadow-inner">
           <span className="material-symbols-outlined text-[#005129] text-3xl">{icon}</span>
         </div>
         <h2 className="text-2xl font-black text-slate-800 tracking-tight">{title}</h2>
       </div>
 
-      <p className="text-slate-500 font-medium leading-relaxed">{description}</p>
-
-      <ul className="space-y-3 mt-2">
+      <p className="text-slate-500 font-medium leading-relaxed">{description}</p> <ul className="space-y-3 mt-2">
         {features.map((feat: string) => (
-          <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-600">
-            <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
+          <li key={feat} className="flex items-center gap-3 text-sm font-bold text-slate-600"> <span className="material-symbols-outlined text-emerald-500 text-xl">check_circle</span>
             {feat}
           </li>
         ))}

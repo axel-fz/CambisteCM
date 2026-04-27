@@ -42,9 +42,9 @@ interface CreatedRequest {
 }
 
 const STATUS_STYLES = {
-  online: "bg-emerald-50 text-emerald-700",
-  busy: "bg-amber-50 text-amber-700",
-  offline: "bg-slate-100 text-slate-500",
+  online: "bg-emerald-50  text-emerald-700 ",
+  busy: "bg-amber-50  text-amber-700 ",
+  offline: "bg-slate-100  text-slate-500 ",
 };
 
 const STATUS_LABELS = {
@@ -135,7 +135,7 @@ export default function ContactModal({
     changer.type === "OFFER" ? "Devise proposée" : "Devise recherchée";
 
   async function handleSubmit() {
-    if (!amount || !fromCurrency || !toCurrency) {
+    if (!amount || !fromCurrency || !toCurrency || !changer) {
       setError("Veuillez renseigner le montant et les deux devises.");
       return;
     }
@@ -203,36 +203,34 @@ export default function ContactModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4 py-8"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+        className="relative w-full max-w-2xl rounded-2xl border border-slate-100 bg-white  p-6 shadow-2xl transition-all animate-in fade-in zoom-in duration-200"
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Fermer"
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200"
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500  transition-colors hover:bg-slate-200 "
         >
           <span className="material-symbols-outlined text-xl">close</span>
         </button>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#005129] text-lg font-bold text-white">
+            <div className="flex items-start gap-4"> <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#005129] text-lg font-bold text-white">
                 {changer.user.name.substring(0, 2).toUpperCase()}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-[#005129]">
+              <div className="min-w-0 flex-1"> <p className="text-sm font-medium text-[#005129] ">
                   {counterpartLabel}
                 </p>
-                <h3 className="text-xl font-bold text-slate-800">
+                <h3 className="text-xl font-bold text-slate-800 ">
                   {changer.user.name}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 ">
                   {changer.neighborhood || changer.user.neighborhood}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -242,8 +240,7 @@ export default function ContactModal({
                     <span className="h-2 w-2 rounded-full bg-current" />
                     {STATUS_LABELS[changer.status]}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-sm text-slate-500">
-                    <span className="material-symbols-outlined text-[18px] text-amber-500">
+                  <span className="inline-flex items-center gap-1 text-sm text-slate-500 "> <span className="material-symbols-outlined text-[18px] text-amber-500">
                       star
                     </span>
                     {changer.user.rating.toFixed(1)} ({changer.user.reviewCount}
@@ -253,37 +250,35 @@ export default function ContactModal({
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 rounded-2xl border border-slate-100 bg-[#f7faf3] p-4 sm:grid-cols-2">
+            <div className="mt-6 grid gap-4 rounded-2xl border border-slate-100 bg-[#f7faf3]  p-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400 ">
                   {requestCurrencyLabel}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">
+                <p className="mt-1 text-sm font-semibold text-slate-800 ">
                   {changer.currency}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400 ">
                   Taux
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">
-                  {changer.rate || changer.amount || "Non communiqué"}
+                <p className="mt-1 text-sm font-semibold text-slate-800 "> {changer.rate || changer.amount || "Non communiqué"}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-4">
-              <h4 className="text-sm font-semibold text-slate-800">
+            <div className="mt-6 rounded-2xl border border-slate-100 bg-white  p-4">
+              <h4 className="text-sm font-semibold text-slate-800 ">
                 Demande d&apos;échange
               </h4>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-500 ">
                 Enregistrez votre demande pour suivre l&apos;échange dans
                 l&apos;application.
               </p>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <label className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3"> <label className="space-y-2">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400 ">
                     Montant
                   </span>
                   <input
@@ -291,13 +286,12 @@ export default function ContactModal({
                     min="0"
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#005129]"
+                    className="w-full rounded-xl border border-slate-200 bg-white  px-4 py-3 text-sm text-slate-800  outline-none transition-colors focus:border-[#005129]"
                     placeholder="150000"
                   />
                 </label>
 
-                <label className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <label className="space-y-2"> <span className="text-xs font-medium uppercase tracking-wide text-slate-400 ">
                     De
                   </span>
                   <input
@@ -305,13 +299,12 @@ export default function ContactModal({
                     onChange={(event) =>
                       setFromCurrency(event.target.value.toUpperCase())
                     }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#005129]"
+                    className="w-full rounded-xl border border-slate-200 bg-white  px-4 py-3 text-sm text-slate-800  outline-none transition-colors focus:border-[#005129]"
                     placeholder="XAF"
                   />
                 </label>
 
-                <label className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <label className="space-y-2"> <span className="text-xs font-medium uppercase tracking-wide text-slate-400 ">
                     Vers
                   </span>
                   <input
@@ -319,7 +312,7 @@ export default function ContactModal({
                     onChange={(event) =>
                       setToCurrency(event.target.value.toUpperCase())
                     }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition-colors focus:border-[#005129]"
+                    className="w-full rounded-xl border border-slate-200 bg-white  px-4 py-3 text-sm text-slate-800  outline-none transition-colors focus:border-[#005129]"
                     placeholder="EUR"
                   />
                 </label>
@@ -347,28 +340,25 @@ export default function ContactModal({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-white p-4">
-            <h4 className="text-sm font-semibold text-slate-800">
+          <div className="rounded-2xl border border-slate-100 bg-white  p-4">
+            <h4 className="text-sm font-semibold text-slate-800 ">
               Informations de contact
             </h4>
 
             {createdRequest ? (
               <>
-                <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                  <p className="text-sm font-medium text-emerald-800">
+                <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4"> <p className="text-sm font-medium text-emerald-800">
                     Demande enregistrée
                   </p>
                   <p className="mt-1 text-sm text-emerald-700">
                     Statut: {createdRequest.status}
                   </p>
-                  <p className="mt-1 text-sm text-emerald-700">
-                    {createdRequest.amount} {createdRequest.fromCurrency} vers{" "}
+                  <p className="mt-1 text-sm text-emerald-700"> {createdRequest.amount} {createdRequest.fromCurrency} vers{" "}
                     {createdRequest.toCurrency}
                   </p>
                 </div>
 
-                <p className="mt-4 text-sm text-slate-500">Téléphone</p>
-                <p className="mt-1 text-lg font-bold text-slate-800">{phone}</p>
+                <p className="mt-4 text-sm text-slate-500 ">Téléphone</p> <p className="mt-1 text-lg font-bold text-slate-800 ">{phone}</p>
 
                 <div className="mt-4 flex flex-col gap-3">
                   <a
@@ -394,16 +384,15 @@ export default function ContactModal({
                 </div>
               </>
             ) : (
-              <div className="mt-4 rounded-2xl border border-slate-100 bg-[#f7faf3] p-4">
-                <p className="text-sm text-slate-500">
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-[#f7faf3]  p-4">
+                <p className="text-sm text-slate-500 ">
                   Créez une demande d&apos;échange pour enregistrer votre
                   intention et débloquer les coordonnées du partenaire.
                 </p>
               </div>
             )}
 
-            <div className="mt-6 flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-              <span className="material-symbols-outlined text-[20px] text-emerald-700">
+            <div className="mt-6 flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4"> <span className="material-symbols-outlined text-[20px] text-emerald-700">
                 shield
               </span>
               <p className="text-sm text-emerald-800">

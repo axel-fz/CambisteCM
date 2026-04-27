@@ -144,15 +144,14 @@ export default async function DashboardPage() {
   return (
     <div className="relative min-h-screen space-y-10 pb-10">
       {/* Background Decor */}
-      <div className="pointer-events-none absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full bg-emerald-100/50 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-amber-50/50 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full bg-emerald-100/50 blur-3xl transition-colors" />
+      <div className="pointer-events-none absolute bottom-0 left-0 -z-10 h-96 w-96 rounded-full bg-amber-50/50 blur-3xl transition-colors" />
 
-      <header className="relative overflow-hidden rounded-[2rem] border border-white/40 bg-white/60 p-8 shadow-xl backdrop-blur-xl md:p-10">
+      <header className="relative overflow-hidden rounded-[2rem] border border-white/40 bg-white/60  p-8 shadow-xl backdrop-blur-xl md:p-10 transition-colors">
         <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#005129]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#005129] ">
+              <span className="relative flex h-2 w-2"> <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
               </span>
               {roleLabel} Connecté
@@ -162,19 +161,16 @@ export default async function DashboardPage() {
             </h1>
             <p className="mt-4 max-w-xl text-lg font-medium text-slate-500/80 leading-relaxed">
               {role === "echangeur" 
-                ? "Gérez vos besoins de devises et connectez-vous aux meilleurs cambistes en temps réel."
-                : "Optimisez votre visibilité et gérez vos demandes d'échanges reçues avec efficacité."}
+                ? "Gerez vos besoins de devises et connectez-vous aux meilleurs cambistes en temps reel."
+                : "Optimisez votre visibilite et gerez vos demandes d'echanges reçues avec efficacite."}
             </p>
           </div>
 
-          <div className="hidden xl:block">
-             <div className="flex items-center gap-4 rounded-3xl border border-white/60 bg-white/40 p-2 pr-6 shadow-sm backdrop-blur-md">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#005129] text-white shadow-lg shadow-emerald-900/20">
-                  <span className="material-symbols-outlined">verified_user</span>
+          <div className="hidden xl:block"> <div className="flex items-center gap-4 rounded-3xl border border-white/60  bg-white/40  p-2 pr-6 shadow-sm backdrop-blur-md">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#005129] text-white shadow-lg shadow-emerald-900/20"> <span className="material-symbols-outlined">verified_user</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-tight text-slate-400">Statut Compte</p>
-                  <p className="text-sm font-bold text-slate-700">Profil Vérifié</p>
+                  <p className="text-xs font-bold uppercase tracking-tight text-slate-400 ">Statut Compte</p> <p className="text-sm font-bold text-slate-700 ">Profil Vérifié</p>
                 </div>
              </div>
           </div>
@@ -187,15 +183,14 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_auto]">
-        <div className="space-y-10">
-          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
+      <div className="grid gap-10 lg:grid-cols-[1fr_auto]"> <div className="space-y-10">
+          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60  p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
              <div className="p-8 md:p-10">
                 <MyListingsSection role={role} />
              </div>
           </section>
 
-          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
+          <section className="group relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60  p-1 shadow-2xl backdrop-blur-2xl transition-all hover:shadow-emerald-900/5">
              <div className="p-8 md:p-10">
                 <ChangersSection role={role} />
              </div>

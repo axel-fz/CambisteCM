@@ -62,10 +62,8 @@ export default async function HistoryPage() {
   const requests = await getHistory(userId);
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-800">Historique</h1>
-        <p className="mt-2 text-sm text-slate-500">
+    <div className="space-y-8"> <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-bold text-slate-800">Historique</h1> <p className="mt-2 text-sm text-slate-500">
           Retrouvez l&apos;ensemble de vos échanges passés, terminés ou annulés.
         </p>
       </section>

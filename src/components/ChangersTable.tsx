@@ -60,8 +60,7 @@ export default function ChangersTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-slate-400">
-        <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+      <div className="flex items-center justify-center py-16 text-slate-400"> <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
         Chargement des cambistes…
       </div>
     );
@@ -69,22 +68,18 @@ export default function ChangersTable() {
 
   if (changers.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-400">
-        <span className="material-symbols-outlined text-5xl block mb-2">search_off</span>
+      <div className="text-center py-16 text-slate-400"> <span className="material-symbols-outlined text-5xl block mb-2">search_off</span>
         Aucun cambiste disponible pour ces critères.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm"> <table className="w-full text-sm">
         <thead className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wide">
           <tr>
-            <th className="text-left px-6 py-4">Profil</th>
-            <th className="text-left px-6 py-4">Statut</th>
-            <th className="text-left px-6 py-4">Taux Proposé</th>
-            <th className="text-left px-6 py-4">Évaluation</th>
+            <th className="text-left px-6 py-4">Profil</th> <th className="text-left px-6 py-4">Statut</th>
+            <th className="text-left px-6 py-4">Taux Proposé</th> <th className="text-left px-6 py-4">Évaluation</th>
             <th className="text-left px-6 py-4">Action</th>
           </tr>
         </thead>
@@ -94,33 +89,27 @@ export default function ChangersTable() {
             return (
               <tr key={c._id} className="hover:bg-slate-50 transition-colors">
                 {/* Profile column: initials avatar + name + location */}
-                <td className="px-6 py-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 font-bold flex items-center justify-center text-sm">
+                <td className="px-6 py-4 flex items-center gap-3"> <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 font-bold flex items-center justify-center text-sm">
                     {c.initials}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">{c.name}</p>
-                    <p className="text-slate-400 text-xs">{c.neighborhood || "—"}</p>
+                    <p className="font-semibold text-slate-800">{c.name}</p> <p className="text-slate-400 text-xs">{c.neighborhood || "—"}</p>
                   </div>
                 </td>
 
                 {/* Status badge */}
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[c.status]}`}>
+                <td className="px-6 py-4"> <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[c.status]}`}>
                     {STATUS_LABELS[c.status]}
                   </span>
                 </td>
 
                 {/* Exchange rate */}
-                <td className="px-6 py-4 font-medium text-slate-700">
-                  1 {c.currency} → <span className="text-green-600">{c.rate || "—"}</span>
+                <td className="px-6 py-4 font-medium text-slate-700"> 1 {c.currency} → <span className="text-green-600">{c.rate || "—"}</span>
                 </td>
 
                 {/* Star rating */}
-                <td className="px-6 py-4">
-                  <span className="text-amber-400">★</span>
-                  <span className="font-medium ml-1">{c.rating.toFixed(1)}</span>
-                  <span className="text-slate-400 ml-1">({c.reviewCount})</span>
+                <td className="px-6 py-4"> <span className="text-amber-400">★</span>
+                  <span className="font-medium ml-1">{c.rating.toFixed(1)}</span> <span className="text-slate-400 ml-1">({c.reviewCount})</span>
                 </td>
 
                 {/* Unlock / Unlocked button */}

@@ -42,12 +42,10 @@ export default async function RequestsPage() {
   const isPro = user.role === "changeur";
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h1 className="text-3xl font-bold text-slate-800">
-          {isPro ? "Demandes reçues" : "Mes demandes"}
+    <div className="space-y-8"> <section className="rounded-2xl border border-slate-100  bg-white  p-6 shadow-sm transition-colors">
+        <h1 className="text-3xl font-bold text-slate-800 "> {isPro ? "Demandes reçues" : "Mes demandes"}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-slate-500 ">
           {isPro 
             ? "Consultez les demandes envoyées par les échangeurs intéressés par vos offres."
             : "Suivez les demandes d'échange que vous avez créées et les contacts débloqués."}
